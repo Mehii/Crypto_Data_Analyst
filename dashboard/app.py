@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import date, timedelta
 import sqlite3
 import subprocess
 import sys
@@ -395,6 +396,121 @@ st.subheader(
 )
 
 
+# ----------------------------------------------------------
+# QUICK PERIOD FILTER
+# ----------------------------------------------------------
+
+period_option = st.selectbox(
+    "Quick Period",
+    [
+        "Custom",
+        "Today",
+        "This Week",
+        "Last Week",
+        "This Month",
+        "Last Month",
+        "Last 3 Months",
+        "This Year",
+    ],
+    index=4,
+)
+
+
+today = date.today()
+
+
+if period_option == "Today":
+
+    quick_start_date = today
+    quick_end_date = today
+
+
+elif period_option == "This Week":
+
+    quick_start_date = (
+        today
+        -
+        timedelta(days=today.weekday())
+    )
+
+    quick_end_date = today
+
+
+elif period_option == "Last Week":
+
+    this_week_start = (
+        today
+        -
+        timedelta(days=today.weekday())
+    )
+
+    quick_start_date = (
+        this_week_start
+        -
+        timedelta(days=7)
+    )
+
+    quick_end_date = (
+        this_week_start
+        -
+        timedelta(days=1)
+    )
+
+
+elif period_option == "This Month":
+
+    quick_start_date = today.replace(
+        day=1
+    )
+
+    quick_end_date = today
+
+
+elif period_option == "Last Month":
+
+    this_month_start = today.replace(
+        day=1
+    )
+
+    quick_end_date = (
+        this_month_start
+        -
+        timedelta(days=1)
+    )
+
+    quick_start_date = quick_end_date.replace(
+        day=1
+    )
+
+
+elif period_option == "Last 3 Months":
+
+    quick_start_date = (
+        pd.Timestamp(today)
+        -
+        pd.DateOffset(months=3)
+    ).date()
+
+    quick_end_date = today
+
+
+elif period_option == "This Year":
+
+    quick_start_date = date(
+        today.year,
+        1,
+        1
+    )
+
+    quick_end_date = today
+
+
+else:
+
+    quick_start_date = default_start_date
+    quick_end_date = default_end_date
+
+
 col1, col2, col3, col4 = st.columns(
     4
 )
@@ -404,8 +520,10 @@ with col1:
 
     start_date = st.date_input(
         "From",
-        value=default_start_date,
+        value=quick_start_date,
         format="DD/MM/YYYY",
+        key=f"start_date_{period_option}",
+        disabled=period_option != "Custom",
     )
 
 
@@ -413,8 +531,10 @@ with col2:
 
     end_date = st.date_input(
         "To",
-        value=default_end_date,
+        value=quick_end_date,
         format="DD/MM/YYYY",
+        key=f"end_date_{period_option}",
+        disabled=period_option != "Custom",
     )
 
 
